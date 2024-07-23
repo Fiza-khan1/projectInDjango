@@ -1,0 +1,25 @@
+{% extends 'app/base.html' %}
+{% load static %}
+{% block title %}Buy Now{% endblock title %}
+{% block main-content %}
+<!-- 1st Product Slider -->
+<div class="m-3">
+    <h2>Mobile Categories</h2>
+    {% if product %}
+      {% for m in product %}
+      <a href="{% url 'product_detail' m.id %}" class="btn">
+        <div class="item">
+          <img src="{{ m.product_img.url }}" alt="" height="200px">
+          <span class="fw-bold">{{ m.title }}</span><br>
+          <span class="fs-5">{{ m.selling_price }}</span>
+      </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p>No products found in this category.</p>
+    {% endif %}
+  </div>
+{% endblock main-content %}
+
+
