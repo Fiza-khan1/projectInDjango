@@ -1,15 +1,28 @@
 from typing import Any
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render,redirect
-from django.contrib.auth.forms import AuthenticationForm
-from .forms import RegForm
+from .forms import RegForm,CustomerForm
 from django.contrib import messages
 from django.contrib.auth import authenticate,login,logout
 from django.views import View
 from .models import Product
 from django.views.generic.detail import DetailView
 from django.contrib.auth.models import User
+from .forms import loginForm,passChange
+from django.views.generic.edit import FormView
+from django.urls import reverse_lazy
+from django.contrib.auth.views import LoginView,PasswordChangeView
 
-
+class change_password(PasswordChangeView):
+    template_name = "app/changepassword.html"
+    form_class = passChange
+    success_url = reverse_lazy('home')
+    def form_valid(self, form):
+        messages.success(self.request,'Password Cahnge Successfully')
+        return super().form_valid(form)
+    def form_invalid(self, form):    
+        return super().form_invalid(form)
+ 
 class productView(View):
  def get(self,request):
    mobile=Product.objects.filter(category='M')
@@ -33,9 +46,6 @@ class product_detail(DetailView):
   model=Product
   template_name='app/productdetail.html'
 
-  
-  
-
 # def add_to_cart(request,pk):
 #  product=Product.objects.get(id=pk)
 #  totalPrice=product.selling_price+700
@@ -55,17 +65,25 @@ class add_to_cart(DetailView):
 def buy_now(request):
  return render(request, 'app/buynow.html')
 
-def profile(request):
- return render(request, 'app/profile.html')
-
+class profile(FormView):
+    template_name = "app/profile.html"
+    form_class = CustomerForm
+    success_url = reverse_lazy('home')
+    def form_valid(self, form):
+        customer=form.save(commit=False)
+        customer.user = self.request.user
+        customer.save()
+        return super().form_valid(form)
+    def form_invalid(self, form):
+        return self.render_to_response(self.get_context_data(form=form))
 def address(request):
+ 
  return render(request, 'app/address.html')
 
 def orders(request):
  return render(request, 'app/orders.html')
 
-def change_password(request):
- return render(request, 'app/changepassword.html')
+
 
 
 class mobile(View):
@@ -87,23 +105,32 @@ class stationary(View):
     def get(self,request):
         stationary=Product.objects.filter(category='S')
         return render(request, 'app/mobile.html',{'product':stationary})
-    
-   
+class userlogin(LoginView):  
+    template_name = "app/login.html"
+    def form_valid(self, form):
+        messages.success(self.request, 'Login Successfully!!!!!!')
+        return super().form_valid(form)
+    def form_invalid(self, form):
+        messages.error(self.request, 'Invalid credentials, please try again.')
+        return super().form_invalid(form)
 
-def userlogin(request):
- if request.method=='POST':
-        email=['email']
-        password=request.POST['password']
-        email=request.POST['email']
-        username = User.objects.get(email=email.lower()).username
-        print(username)
-        user = authenticate(username=username, password=password)
-        print(user)
-        if user is not None:
-            login(request,user)
-            messages.success(request,'Login Successfully')
-            return redirect('home')
- return render(request, 'app/login.html')
+# def userlogin(request):
+#  if request.method=='POST':
+#         password=request.POST.get('password')
+#         email=request.POST.get('email')
+#         try:
+#               username = User.objects.get(email=email).username
+#               print(username)
+#               user = authenticate(username=username, password=password)
+#               print(user)
+#         except User.DoesNotExist:
+#             messages.error(request, 'Invalid email or password.')
+#             return render(request, 'app/login.html')
+#         if user is not None:
+#             login(request,user)
+#             messages.success(request,'Login Successfully')
+#             return redirect('home')
+#  return render(request, 'app/login.html')
 
 def customerregistration(request):
     if request.method=='POST':
@@ -127,3 +154,8 @@ def remove(request,pk):
   product.delete()
   return redirect('home')
 
+def userLogout(request):
+  logout(request)
+  messages.success(request, 'You have been logged out successfully.')
+  return redirect('login')
+  

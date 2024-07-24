@@ -63,10 +63,8 @@ class Customer(models.Model):
     locality = models.CharField(max_length=100)
     city = models.CharField(choices=STATE_CHOICES, max_length=200)
     zipcode = models.IntegerField()
-
     def __str__(self):
         return f"Customer {self.name} ({self.id})"
-
 class Product(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=100)
